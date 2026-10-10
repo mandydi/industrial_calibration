@@ -22,8 +22,8 @@ RUN apt update -y -qq \
   && rosdep update
 
 # Build the repository
-# tmpfs mount a directory for the workspace so as not to unnecessarily copy source code into the docker image for the repository dependencies
-# Bind mount the source directory so as not to unnecessarily copy source code into the docker image
+# tmpfs mount a directory for the workspace so as not to unnecessarily copy source code into the docker images for the repository dependencies
+# Bind mount the source directory so as not to unnecessarily copy source code into the docker images
 ARG WORKSPACE_DIR=/tmpfs/industrial_calibration
 ARG INSTALL_DIR=/opt/industrial_calibration
 RUN --mount=type=tmpfs,target=${WORKSPACE_DIR} --mount=type=bind,target=${WORKSPACE_DIR}/src/industrial_calibration \

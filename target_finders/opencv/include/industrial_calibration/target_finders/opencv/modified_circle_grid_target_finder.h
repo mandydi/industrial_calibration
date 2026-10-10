@@ -36,7 +36,7 @@ struct ModifiedCircleGridTarget : Target2D3D
    * @param cols - Number of columns in the target
    * @param spacing - The spacing between adjacent circle centers (m)
    */
-  ModifiedCircleGridTarget(const unsigned rows, const unsigned cols, const double spacing);
+  ModifiedCircleGridTarget(const unsigned rows, const unsigned cols, const double spacing, const bool asymmetric = false);
 
   bool operator==(const ModifiedCircleGridTarget& other) const;
 
@@ -47,6 +47,7 @@ struct ModifiedCircleGridTarget : Target2D3D
   unsigned rows;
   unsigned cols;
   double spacing;
+  bool asymmetric;
 };
 
 /**

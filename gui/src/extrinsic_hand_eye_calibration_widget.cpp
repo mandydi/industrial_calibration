@@ -330,7 +330,26 @@ void ExtrinsicHandEyeCalibrationWidget::saveResults(const std::string& file)
   if (!f)
     throw ICalException("Failed to open file: '" + file + "' for writing");
 
-  f << YAML::Node(*result_);
+  YAML::Node node(*result_);
+
+  // For an eye-in-hand calibration, camera_mount is the robot TCP. Add explicit
+  // 4x4 matrices in both directions so the result can be consumed without any
+  // ambiguity about quaternion ordering or transform direction.
+  auto matrixToNode = [](const Eigen::Matrix4d& matrix) {
+    YAML::Node rows;
+    for (Eigen::Index row = 0; row < matrix.rows(); ++row)
+    {
+      YAML::Node values;
+      for (Eigen::Index col = 0; col < matrix.cols(); ++col)
+        values.push_back(matrix(row, col));
+      rows.push_back(values);
+    }
+    return rows;
+  };
+
+  node["T_tcp_camera"] = matrixToNode(result_->camera_mount_to_camera.matrix());
+  node["T_camera_tcp"] = matrixToNode(result_->camera_mount_to_camera.inverse().matrix());
+  f << node;
 }
 
 }  // namespace industrial_calibration

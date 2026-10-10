@@ -1,13 +1,12 @@
-# services:
-#   industrial_calibration:
-#     environment:
-#       NVIDIA_DRIVER_CAPABILITIES: all
-#     entrypoint: ./extrinsic_calibration_gui.sh
-#     entrypoint: ./intrinsic_calibration_gui.sh
-#     deploy:
-#       resources:
-#         reservations:
-#           devices:
-#             - driver: nvidia
-#               count: 1
-#               capabilities: [gpu]
+services:
+  industrial_calibration:
+    volumes:
+      - ..:/workspace
+    # Bypass the images's CRLF-affected wrapper script and launch the GUI directly.
+    entrypoint:
+      - /bin/bash
+      - -lc
+      - >-
+        source /opt/industrial_calibration/setup.bash &&
+        source /workspace/.industrial_calibration_overlay/install/setup.bash &&
+        exec /workspace/.industrial_calibration_overlay/install/industrial_calibration/bin/industrial_calibration_extrinsic_hand_eye_calibration_app

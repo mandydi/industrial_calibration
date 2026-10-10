@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # Author: Jeremy Zoss
  
-# This script provides functions to generate an image to be used as a target
+# This script provides functions to generate an images to be used as a target
 # for calibrating cameras.  These functions can be incorporated into other
 # scripts, or this program can be run directly (cmd line or GUI).
 #

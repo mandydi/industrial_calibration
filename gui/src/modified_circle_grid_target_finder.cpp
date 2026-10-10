@@ -26,6 +26,7 @@ ModifiedCircleGridTargetFinderWidget::~ModifiedCircleGridTargetFinderWidget() { 
 
 void ModifiedCircleGridTargetFinderWidget::configure(const YAML::Node& node)
 {
+  asymmetric_ = node["asymmetric"] ? node["asymmetric"].as<bool>() : false;
   ui_->rowSpinBox->setValue(node["rows"].as<int>());
   ui_->colSpinBox->setValue(node["cols"].as<int>());
   ui_->spacingDoubleSpinBox->setValue(node["spacing"].as<double>());
@@ -84,6 +85,8 @@ YAML::Node ModifiedCircleGridTargetFinderWidget::save() const
   node["rows"] = ui_->rowSpinBox->value();
   node["cols"] = ui_->colSpinBox->value();
   node["spacing"] = ui_->spacingDoubleSpinBox->value();
+  if (asymmetric_)
+    node["asymmetric"] = true;
 
   YAML::Node subnode;
   node["circle_detector_params"] = subnode;

@@ -20,6 +20,7 @@ public:
 
 private:
   Ui::ModifiedCircleGridTargetFinder* ui_;
+  bool asymmetric_{ false };
 };
 
 }  // namespace industrial_calibration

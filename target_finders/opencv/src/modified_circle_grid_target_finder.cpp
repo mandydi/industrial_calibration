@@ -370,6 +370,15 @@ static std::vector<cv::Point2d> extractModifiedCircleGrid(const cv::Mat& image, 
 
   std::vector<cv::Point2d> centers;
 
+  if (target.asymmetric)
+  {
+    bool found = cv::findCirclesGrid(image, pattern_size, centers,
+                                     cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING, detector_ptr);
+    if (!found || centers.size() != rows * cols)
+      throw ICalException("Failed to find asymmetric circle centers");
+    return centers;
+  }
+
   bool regular_pattern_found = cv::findCirclesGrid(image, pattern_size, centers,
                                                    cv::CALIB_CB_SYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING, detector_ptr);
   if (regular_pattern_found && (centers.size() == rows * cols))
@@ -393,8 +402,9 @@ static std::vector<cv::Point2d> extractModifiedCircleGrid(const cv::Mat& image, 
   return extractKeyPoints(image, centers, detector_ptr, rows, cols, flipped);
 }
 
-ModifiedCircleGridTarget::ModifiedCircleGridTarget(const unsigned rows_, const unsigned cols_, const double spacing_)
-  : rows(rows_), cols(cols_), spacing(spacing_)
+ModifiedCircleGridTarget::ModifiedCircleGridTarget(const unsigned rows_, const unsigned cols_, const double spacing_,
+                                                   const bool asymmetric_)
+  : rows(rows_), cols(cols_), spacing(spacing_), asymmetric(asymmetric_)
 {
 }
 
@@ -404,6 +414,7 @@ bool ModifiedCircleGridTarget::operator==(const ModifiedCircleGridTarget& other)
   equal &= (rows == other.rows);
   equal &= (cols == other.cols);
   equal &= (std::abs(spacing - other.spacing) < std::numeric_limits<double>::epsilon());
+  equal &= (asymmetric == other.asymmetric);
 
   return equal;
 }
@@ -433,14 +444,23 @@ std::vector<Eigen::Vector3d> ModifiedCircleGridTarget::createPoints() const
   std::vector<Eigen::Vector3d> points;
   points.reserve(rows * cols);
 
-  for (std::size_t i = 1; i < (rows + 1); i++)
+  if (asymmetric)
   {
-    double y = (rows - i) * spacing;
-    for (std::size_t j = 0; j < cols; j++)
+    const double unit = spacing / 2.0;
+    for (std::size_t i = 0; i < rows; ++i)
     {
-      double x = j * spacing;
-      Eigen::Vector3d point(x, y, 0.0);
-      points.push_back(point);
+      for (std::size_t j = 0; j < cols; ++j)
+        points.emplace_back((2.0 * static_cast<double>(j) + static_cast<double>(i % 2)) * unit,
+                            static_cast<double>(i) * unit, 0.0);
+    }
+  }
+  else
+  {
+    for (std::size_t i = 1; i < (rows + 1); i++)
+    {
+      double y = (rows - i) * spacing;
+      for (std::size_t j = 0; j < cols; j++)
+        points.emplace_back(static_cast<double>(j) * spacing, y, 0.0);
     }
   }
 
@@ -508,7 +528,8 @@ TargetFinderOpenCV::ConstPtr ModifiedCircleGridTargetFinderFactory::create(const
   int rows = getMember<int>(config, "rows");
   int cols = getMember<int>(config, "cols");
   double spacing = getMember<double>(config, "spacing");
-  ModifiedCircleGridTarget target(rows, cols, spacing);
+  bool asymmetric = config["asymmetric"] ? config["asymmetric"].as<bool>() : false;
+  ModifiedCircleGridTarget target(rows, cols, spacing, asymmetric);
 
   TargetFinderOpenCV::ConstPtr finder;
   if (config["circle_detector_params"])
